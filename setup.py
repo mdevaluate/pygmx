@@ -5,10 +5,17 @@ from Cython.Build import cythonize
 import numpy
 
 
-include_dirs = [numpy.get_include(), 'gromacs/src','gromacs/src/external/tng_io/include',]
+def locate_lib(directory, lib):
+    flib = 'lib{}.so'.format(lib)
+    for root, dirs, files in os.walk(directory):
+        if flib in files:
+            return root
+
+
+include_dirs = [numpy.get_include(), 'gromacs/src', 'gromacs/src/external/tng_io/include']
 library_dirs = []
 if 'LD_LIBRARY_PATH' in os.environ:
-    lib = os.environ['LD_LIBRARY_PATH'].split(':')[0]
+    lib = locate_lib(os.environ['LD_LIBRARY_PATH'].split(':')[0], 'gromacs')
     library_dirs.insert(0, lib)
     include = lib.replace('/lib', '/include')
     if os.path.exists(include):
