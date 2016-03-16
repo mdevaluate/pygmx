@@ -1,0 +1,3 @@
+[submodule "gromacs"]
+	path = gromacs
+	url = git@github.com:gromacs/gromacs.git
