@@ -13,15 +13,13 @@ from topology cimport *
 
 
 cdef extern from "gromacs/fileio/tpxio.h":
-    void read_tpxheader(const char *fn, t_tpxheader *tpx, bint TopOnlyOK)
-
-    cdef struct t_tpxheader:
-      bint   bIr        # Non zero if input_rec is present		*/
-      bint   bBox       # Non zero if a box is present			*/
-      bint   bTop       # Non zero if a topology is present		*/
-      bint   bX         # Non zero if coordinates are present		*/
-      bint   bV         # Non zero if velocities are present		*/
-      bint   bF         # Non zero if forces are present (no longer
+    ctypedef struct t_tpxheader:
+      int   bIr        # Non zero if input_rec is present		*/
+      int   bBox       # Non zero if a box is present			*/
+      int   bTop       # Non zero if a topology is present		*/
+      int   bX         # Non zero if coordinates are present		*/
+      int   bV         # Non zero if velocities are present		*/
+      int   bF         # Non zero if forces are present (no longer
                        #    supported, but retained so old .tpr can be read) */
       int   natoms     # The total number of atoms			*/
       int   ngtc       # The number of temperature coupling groups    */
@@ -29,12 +27,14 @@ cdef extern from "gromacs/fileio/tpxio.h":
       int   fep_state  # Current value of the alchemical state --
 
 
+    void read_tpxheader(const char *fn, t_tpxheader *tpx, bint TopOnlyOK, int *version, int *generation)
     int read_tpx(const char *fname,
                  t_inputrec *ir,
-                 double box[3][3],
+                 matrix box,
                  int *natoms,
                  rvec *x,
                  rvec *v,
+                 rvec *f,
                  gmx_mtop_t *mtop)
 
 
@@ -172,20 +172,25 @@ cdef class TPXReader:
 
     def __cinit__(self, filename):
         filename = cstr(filename)
-        read_tpxheader(<char *>filename, &self.header, True)
-        self.n_atoms = self.header.natoms
-        self.n_tcouple_groups = self.header.ngtc
 
-        cdef np.ndarray[real, ndim=2] coordinates = np.empty((self.n_atoms, 3), dtype=np.float32)
-        cdef np.ndarray[real, ndim=2] velocites = np.empty((self.n_atoms, 3), dtype=np.float32)
+        # Arrays for coordinates etc can be NULL, if they shouldn't be read
+        # cdef int version, generation
+        # read_tpxheader(<char *>filename, &self.header, True, &version, &generation)
+        # self.n_atoms = self.header.natoms
+        # self.n_tcouple_groups = self.header.ngtc
+        # cdef np.ndarray[real, ndim=2] coordinates = np.empty((self.n_atoms, 3), dtype=np.float32)
+        # cdef np.ndarray[real, ndim=2] velocites = np.empty((self.n_atoms, 3), dtype=np.float32)
+        # cdef np.ndarray[real, ndim=2] forces = np.empty((self.n_atoms, 3), dtype=np.float32)
 
         return_code = read_tpx(
             <char *>filename,
             &self.input_record,
             self.box,
             &self.n_atoms,
-            <rvec *>coordinates.data,
-            <rvec *>velocites.data,
+            NULL, NULL, NULL,
+            # <rvec *>coordinates.data,
+            # <rvec *>velocites.data,
+            # <rvec *>forces.data,
             &self.topology
         )
         self.topology_name = self.topology.name[0]

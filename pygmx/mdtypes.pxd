@@ -2,7 +2,7 @@
 from utility cimport *
 from math cimport *
 
-cdef extern from "gromacs/mdtypes/inputrec.h":
+cdef extern from "gromacs/legacyheaders/types/inputrec.h":
     ctypedef struct t_simtemp:
         pass
     ctypedef struct t_lambda:
