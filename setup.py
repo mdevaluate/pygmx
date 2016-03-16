@@ -15,8 +15,8 @@ def locate_lib(directory, lib):
 include_dirs = [numpy.get_include(), 'gromacs/src', 'gromacs/src/external/tng_io/include']
 library_dirs = []
 if 'LD_LIBRARY_PATH' in os.environ:
-    lib = locate_lib(os.environ['LD_LIBRARY_PATH'].split(':')[0], 'gromacs')
-    library_dirs.insert(0, lib)
+    lib = os.environ['LD_LIBRARY_PATH'].split(':')[0]
+    library_dirs.insert(0, locate_lib(lib, 'gromacs'))
     include = lib.replace('/lib', '/include')
     if os.path.exists(include):
         include_dirs.insert(0, include)
