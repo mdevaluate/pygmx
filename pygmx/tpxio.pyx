@@ -1,0 +1,191 @@
+# cython: c_string_type=unicode, c_string_encoding=utf8
+# Cython wrapper around tpxio.cpp
+
+# from cython cimport view
+# from array import array
+import numpy as np
+cimport numpy as np
+
+from utility cimport *
+from math cimport *
+from mdtypes cimport *
+from topology cimport *
+
+
+cdef extern from "gromacs/fileio/tpxio.h":
+    void read_tpxheader(const char *fn, t_tpxheader *tpx, bint TopOnlyOK)
+
+    cdef struct t_tpxheader:
+      bint   bIr        # Non zero if input_rec is present		*/
+      bint   bBox       # Non zero if a box is present			*/
+      bint   bTop       # Non zero if a topology is present		*/
+      bint   bX         # Non zero if coordinates are present		*/
+      bint   bV         # Non zero if velocities are present		*/
+      bint   bF         # Non zero if forces are present (no longer
+                       #    supported, but retained so old .tpr can be read) */
+      int   natoms     # The total number of atoms			*/
+      int   ngtc       # The number of temperature coupling groups    */
+      real  _lambda     # Current value of lambda			*/
+      int   fep_state  # Current value of the alchemical state --
+
+
+    int read_tpx(const char *fname,
+                 t_inputrec *ir,
+                 double box[3][3],
+                 int *natoms,
+                 rvec *x,
+                 rvec *v,
+                 gmx_mtop_t *mtop)
+
+
+def cstr(instr):
+    if isinstance(instr, str):
+        instr = instr.encode()
+    return instr
+
+cdef atoms_from_topology(gmx_mtop_t *topology):
+    cdef:
+        t_atoms c_atoms
+        int moltype, resind
+
+    atoms = []
+    masses = []
+    charges = []
+    residues = []
+    for i_molblock in range(topology.nmolblock):
+        moltype = topology.molblock[i_molblock].type
+
+        c_atoms = topology.moltype[moltype].atoms
+        mol_atoms = []
+        mol_q = []
+        mol_m = []
+        for i_atom in range(c_atoms.nr):
+            resind = c_atoms.atom[i_atom].resind
+            resname = c_atoms.resinfo[resind].name[0]
+            if resname not in residues:
+                residues.append(resname)
+            resid = residues.index(resname) + 1
+            mol_atoms.append((
+                resid,
+                resname,
+                c_atoms.atomname[0][i_atom],
+            ))
+            mol_q.append(c_atoms.atom[i_atom].q)
+            mol_m.append(c_atoms.atom[i_atom].m)
+        n_mol = topology.molblock[i_molblock].nmol
+        atoms += mol_atoms * n_mol
+        charges += mol_q * n_mol
+        masses += mol_m * n_mol
+
+    return np.array(atoms)
+
+ctypedef object (*atom_func)(t_atom)
+
+cdef atom_charge(t_atom atom):
+    return atom.q
+
+
+cdef atom_mass(t_atom atom):
+    return atom.m
+
+cdef class TPXReader:
+    cdef:
+        t_tpxheader header
+        t_inputrec input_record
+        gmx_mtop_t topology
+        real box[3][3]
+        readonly int  n_atoms, n_tcouple_groups, n_mol
+        readonly char *topology_name
+
+    cdef _map_atoms(self, object (*func)(t_atom)):
+        cdef t_atoms atoms
+        map = []
+        for i_molblock in range(self.topology.nmolblock):
+            moltype = self.topology.molblock[i_molblock].type
+            nmol = self.topology.molblock[i_molblock].nmol
+            atoms = self.topology.moltype[moltype].atoms
+            mol_map = []
+            for i_atom in range(atoms.nr):
+                mol_map.append(func(atoms.atom[i_atom]))
+            map += mol_map * nmol
+        return map
+
+    property atoms:
+        """
+        Get a list of tuples describing all atoms in the system:
+
+        Returns:
+            List of tuples: (atom_name, residue_id, resiude_name)
+        """
+        def __get__(self):
+            return atoms_from_topology(&self.topology)
+
+    property mass2:
+        def __get__(self):
+            return np.array(self._map_atoms(atom_mass))
+
+    property mass:
+        "Get the masses of all atoms in the system."
+        def __get__(self):
+            cdef t_atoms atoms
+            masses = []
+            for i_molblock in range(self.topology.nmolblock):
+                moltype = self.topology.molblock[i_molblock].type
+                nmol = self.topology.molblock[i_molblock].nmol
+                atoms = self.topology.moltype[moltype].atoms
+                mol_masses = []
+                for i_atom in range(atoms.nr):
+                    mol_masses.append(atoms.atom[i_atom].m)
+                masses += mol_masses * nmol
+            return np.array(masses)
+
+    property charge:
+        "Get the partial charge of all atoms in the system."
+        def __get__(self):
+            cdef t_atoms atoms
+            charges = []
+            for i_molblock in range(self.topology.nmolblock):
+                moltype = self.topology.molblock[i_molblock].type
+                nmol = self.topology.molblock[i_molblock].nmol
+                atoms = self.topology.moltype[moltype].atoms
+                mol_charges = []
+                for i_atom in range(atoms.nr):
+                    mol_charges.append(atoms.atom[i_atom].q)
+                charges += mol_charges * nmol
+            return np.array(charges)
+
+    property type:
+        "Get the type of all atoms in the system."
+        def __get__(self):
+            cdef t_atoms atoms
+            types = []
+            for i_molblock in range(self.topology.nmolblock):
+                moltype = self.topology.molblock[i_molblock].type
+                nmol = self.topology.molblock[i_molblock].nmol
+                atoms = self.topology.moltype[moltype].atoms
+                mol_type = []
+                for i_atom in range(atoms.nr):
+                    mol_type.append(atoms.atom[i_atom].type)
+                types += mol_type * nmol
+            return np.array(types)
+
+
+    def __cinit__(self, filename):
+        filename = cstr(filename)
+        read_tpxheader(<char *>filename, &self.header, True)
+        self.n_atoms = self.header.natoms
+        self.n_tcouple_groups = self.header.ngtc
+
+        cdef np.ndarray[real, ndim=2] coordinates = np.empty((self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[real, ndim=2] velocites = np.empty((self.n_atoms, 3), dtype=np.float32)
+
+        return_code = read_tpx(
+            <char *>filename,
+            &self.input_record,
+            self.box,
+            &self.n_atoms,
+            <rvec *>coordinates.data,
+            <rvec *>velocites.data,
+            &self.topology
+        )
+        self.topology_name = self.topology.name[0]
