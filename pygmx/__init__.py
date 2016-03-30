@@ -7,3 +7,4 @@ from . import xtcio
 from . import tngio
 
 from .tpxio import TPXReader
+from .enxio import EDRFile

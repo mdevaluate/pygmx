@@ -1,11 +1,15 @@
 # Wrapper for xtcio.h: I/O for xtc files.
 
+from cpython.array cimport array
+from array import array
+
 import numpy as np
 cimport numpy as np
 
 from utility cimport *
 from math cimport *
 from fileio cimport *
+
 
 cdef extern from "gromacs/fileio/xtcio.h":
     t_fileio *open_xtc(const char *filename, const char *mode)
@@ -27,69 +31,96 @@ else:
     np_real = np.float
 
 
+#cdef array get_xtc_index_by_frames(t_fileio *fio, int length, int natoms):
+#    cdef:
+        #gmx_bool _bOK
+##        int frame = 1
+#    cdef array cache = array('L')
+#    gmx_fio_rewind(fio)
+#    cache.append(gmx_fio_ftell(fio))
+#    while xtc_seek_frame(fio, frame*500, natoms) == 0:
+#        cache.append(gmx_fio_ftell(fio))
+#        #print(frame, cache[-1])
+#        frame += 1
+#        if frame == length:
+#            break
+#    return cache
+
+cdef array get_xtc_index(t_fileio *fio):
+    cdef:
+        gmx_bool _bOK
+        int natoms, step, frame, state = 1
+        real time, prec
+        matrix box
+        rvec *x
+    cdef array cache = array('L')
+    gmx_fio_rewind(fio)
+    cache.append(gmx_fio_ftell(fio))
+    read_first_xtc(fio, &natoms, &step, &time, box, &x, &prec, &_bOK)
+    cache.append(gmx_fio_ftell(fio))
+    while read_next_xtc(fio, natoms, &step, &time, box, x, &prec, &_bOK):
+        cache.append(gmx_fio_ftell(fio))
+    # the last index is invalid
+    return cache[:-1]
+
+
 cdef class XTCReader:
     cdef:
         t_fileio *fio
         int natoms, cur_step
         real start_time, timestep, prec, cur_time
-        dict _cache
-        #rvec *coords
+        bint has_cache
+        rvec *coords
+        array _cache
 
-    def nearest_cache(self, index):
-        nearest = 0
-        cur_dist = 99999999
-        for ind in self._cache:
-            dist = abs(ind - index)
-            if dist < cur_dist:
-                nearest = ind
-                cur_dist = dist
-        return nearest
+    @property
+    def cache(self):
+        return self._cache
 
-
-    def seek(self, index):
-        if index in self._cache:
-            gmx_fio_seek(self.fio, self._cache[index])
-        else:
-            nearest = self.nearest_cache(index)
-            gmx_fio_seek(self.fio, self._cache[nearest])
-            self.cur_step = index
-            self.cur_time = index * self.timestep + self.start_time
-            xtc_seek_time(self.fio, self.cur_time, self.natoms, index > nearest)
-            self._cache[index] = gmx_fio_ftell(self.fio)
+    def seek(self, int frame):
+        if self.has_cache:
+            gmx_fio_seek(self.fio, self.cache[frame])
 
 
-    def __init__(self, filename):
+    def make_cache(self):
+        self._cache = get_xtc_index(self.fio)
+        self.has_cache = True
+
+    def __cinit__(self):
+        self.has_cache = False
+
+    def __init__(self, filename, make_cache=True):
         if isinstance(filename, str):
             filename = filename.encode()
 
         cdef:
+            int step
             matrix box
             gmx_bool _bOK
-            real time
-        cdef rvec *coords # = np.empty((1,3), dtype=np.float32)
+            real time, prec
+            rvec *x
 
-        self._cache = {}
         self.fio = open_xtc(filename, b'r')
-        read_first_xtc(self.fio, &self.natoms, &self.cur_step, &self.start_time, box,
-            &coords, &self.prec, &_bOK)
-        self._cache[self.cur_step] = gmx_fio_ftell(self.fio)
+        read_first_xtc(self.fio, &self.natoms, &step, &time, box, &x, &prec, &_bOK)
 
-        read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
-            coords, &self.prec, &_bOK)
+        if make_cache:
+            self.make_cache()
 
-        self._cache[<int>self.cur_step] = gmx_fio_ftell(self.fio)
-        self.timestep = time - self.start_time
+    def __len__(self):
+        return len(self.cache)
 
-
-    def __getitem__(self, item):
+    def __getitem__(self, frame):
         cdef matrix box
         cdef gmx_bool _bOK
         cdef real time
         cdef np.ndarray[real, ndim=2] coords = np.empty((self.natoms, 3), dtype=np_real)
-
-        self.seek(item)
-
-        read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
-            <rvec *>coords.data, &self.prec, &_bOK)
-
-        return coords
+        if frame < len(self):
+            self.seek(frame)
+            read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
+                <rvec *>coords.data, &self.prec, &_bOK)
+            if _bOK:
+                return coords
+            else:
+                raise
+        else:
+            raise IndexError('Frame {} is out of range for trajectory of length {}.'.format(frame, len(self)))

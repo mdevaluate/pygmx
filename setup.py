@@ -26,7 +26,7 @@ elif os.path.exists('gromacs/build/lib'):
 if not library_dirs:
     raise OSError("""
         Gromacs library not found.
-        Activate a gromacs module or specify environment variable LD_LIBRARY_PATH.
+        Activate a gromacs module or set environment variable LD_LIBRARY_PATH.
         """)
 
 library_dirs.append('gromacs/src/external/tng_io/build/lib')
@@ -53,14 +53,22 @@ extensions = [
               library_dirs=library_dirs,
               runtime_library_dirs=library_dirs,
               language='c++'),
-    Extension('pygmx.tngio',
-              sources=['pygmx/tngio.pyx'],
+    Extension('pygmx.enxio',
+              sources=['pygmx/enxio.pyx'],
               include_dirs=include_dirs,
               libraries=['gromacs'],
               library_dirs=library_dirs,
               runtime_library_dirs=library_dirs,
+              language='c++'),
+
+#    Extension('pygmx.tngio',
+#              sources=['pygmx/tngio.pyx'],
+#              include_dirs=include_dirs,
+#              libraries=['gromacs'],
+#              library_dirs=library_dirs,
+#              runtime_library_dirs=library_dirs,
               #language='c++'
-              ),
+#              ),
 
 ]
 
