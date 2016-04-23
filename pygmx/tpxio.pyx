@@ -1,8 +1,8 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # Cython wrapper around tpxio.cpp
 
-# from cython cimport view
-# from array import array
+from libc cimport stdio
+
 import numpy as np
 cimport numpy as np
 
@@ -87,6 +87,21 @@ cdef atom_charge(t_atom atom):
 
 cdef atom_mass(t_atom atom):
     return atom.m
+
+
+cdef open_tpx(const char* filename, t_inputrec *ir, matrix box, int *natoms, gmx_mtop_t *top):
+    #cdef stdio.FILE *old_stderr = stdio.stderr
+    #stdio.stderr = stdio.freopen('tmp', 'w', stdio.stderr)
+    cdef char buffer[stdio.BUFSIZ]
+    stdio.setbuf(stdio.stderr, buffer)
+    return_code = read_tpx(filename, ir, box, natoms, NULL, NULL, NULL, top)
+
+    for i in range(stdio.BUFSIZ):
+        buffer[i] = 0
+    stdio.fflush(stdio.stderr)
+    stdio.fseek(stdio.stderr, 0, stdio.SEEK_END)
+    stdio.setbuf(stdio.stderr, NULL)
+    return return_code
 
 cdef class TPXReader:
     cdef:
@@ -181,16 +196,11 @@ cdef class TPXReader:
         # cdef np.ndarray[real, ndim=2] coordinates = np.empty((self.n_atoms, 3), dtype=np.float32)
         # cdef np.ndarray[real, ndim=2] velocites = np.empty((self.n_atoms, 3), dtype=np.float32)
         # cdef np.ndarray[real, ndim=2] forces = np.empty((self.n_atoms, 3), dtype=np.float32)
-
-        return_code = read_tpx(
+        open_tpx(
             <char *>filename,
             &self.input_record,
             self.box,
             &self.n_atoms,
-            NULL, NULL, NULL,
-            # <rvec *>coordinates.data,
-            # <rvec *>velocites.data,
-            # <rvec *>forces.data,
             &self.topology
         )
         self.topology_name = self.topology.name[0]
