@@ -4,4 +4,4 @@ dist/
 *.egg-info
 .cache/
 *.cpp
-gromacs/
+/gromacs
