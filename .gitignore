@@ -5,3 +5,7 @@ dist/
 .cache/
 *.cpp
 /gromacs
+logarithmic.*.so
+logarithmic.c
+coordinates.*.so
+coordinates.c

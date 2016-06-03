@@ -35,10 +35,10 @@ library_dirs = [os.path.abspath(p) for p in library_dirs]
 
 
 extensions = [
-    # Extension('mdevaluate.gromacs.coordinates', [
-    #           'mdevaluate/gromacs/coordinates.pyx'], include_dirs=include_dirs),
-    # Extension('mdevaluate.gromacs.logarithmic', [
-    #           'mdevaluate/gromacs/logarithmic.pyx'], include_dirs=include_dirs),
+     Extension('pygmx.gromacs.coordinates', [
+               'pygmx/gromacs/coordinates.pyx'], include_dirs=include_dirs),
+     Extension('pygmx.gromacs.logarithmic', [
+               'pygmx/gromacs/logarithmic.pyx'], include_dirs=include_dirs),
     Extension('pygmx.tpxio',
               sources=['pygmx/tpxio.pyx'],
               include_dirs=include_dirs,
@@ -76,8 +76,8 @@ setup(
     name='pygmx',
     description='Python wrapper for gromacs library.',
     author_email='niels.mueller@physik.tu-darmstadt.de',
-    packages=['pygmx', ],
-    version='0.0.2',
+    packages=['pygmx', 'pygmx.gromacs'],
+    version='0.1',
     requires=['numpy', 'Cython'],
     ext_modules=cythonize(extensions),
 )

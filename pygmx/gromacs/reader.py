@@ -2,9 +2,9 @@ import xdrlib
 import io
 import os
 from .coordinates import decompress
-from ..utils import hash_anything, merge_hashes
 from functools import partial
 import numpy as np
+import hashlib
 
 TRR_MAGIC = 1993
 XTC_MAGIC = 1995
@@ -352,7 +352,11 @@ class XTCReader(BaseReader):
         return [self[i].time for i in indices]
 
     def __hash__(self):
-        return merge_hashes(hash_anything(self.filename), hash_anything(self._cache))
+        m = hashlib.md5()
+        m.update(self.filename.encode())
+        m.update(str(self._cache).encode())
+        return int.from_bytes(m.digest(), 'big')
+        # return merge_hashes(hash_anything(self.filename), hash_anything(self._cache))
 
 
 class TRRHeader:

@@ -1,4 +1,4 @@
-# distutils: sources = mdevaluate/gromacs/compression.c
+# distutils: sources = pygmx/gromacs/compression.c
 
 from cython cimport view
 from array import array
@@ -19,28 +19,28 @@ cdef extern from "compression.h":
 
 
 def decompress(int size, float precision, minint, maxint, int smallidx, bytes blob):
-     
+
     assert len(minint) == 3
     assert len(maxint) == 3
-    
+
     cdef int minints[3]
     cdef int maxints[3]
-    
+
     for i in range(3):
         minints[i] = minint[i]
         maxints[i] = maxint[i]
-    
-    
+
+
     cdef np.ndarray[float, ndim=2] coordinates = np.empty((size,3), dtype=np.float32)
     cdef size_t readed
-    
+
     xdrfile_decompress_coord_float(
-        <float *>coordinates.data, 
-        size, 
+        <float *>coordinates.data,
+        size,
         precision,
         maxints,
-        minints, 
-        smallidx, 
+        minints,
+        smallidx,
         blob,
         len(blob),
         &readed)
