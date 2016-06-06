@@ -2,13 +2,16 @@
 
 from cpython.array cimport array
 from array import array
+from xdrlib import Unpacker
 
 import numpy as np
 cimport numpy as np
+import os
 
 from utility cimport *
 from math cimport *
 from fileio cimport *
+from gromacs.reader import InvalidIndexException, InvalidMagicException, INDEX_MAGIC, SubscriptableReader, XTCFrame
 
 
 cdef extern from "gromacs/fileio/xtcio.h":
@@ -69,29 +72,84 @@ cdef class XTCReader:
         t_fileio *fio
         int natoms, cur_step
         real start_time, timestep, prec, cur_time
-        bint has_cache
+        bint has_cache, has_times
         rvec *coords
-        array _cache
+        array _cache, _times
+        char *_filename
 
     @property
     def cache(self):
-        return self._cache
+        if self.has_cache:
+            return self._cache
+
+    @cache.setter
+    def cache(self, indices):
+        self._cache = array('L')
+        for i in indices:
+            self._cache.append(i)
+        self.has_cache = True
+
+    @property
+    def times(self):
+        if self.has_times:
+            return self._times
+
+    @times.setter
+    def times(self, times):
+        self._times = array('f')
+        for t in times:
+            self._times.append(t)
+        self.has_times = True
+
+    @property
+    def filename(self):
+        return self._filename.decode()
 
     def seek(self, int frame):
         if self.has_cache:
             gmx_fio_seek(self.fio, self.cache[frame])
 
-
     def make_cache(self):
         self._cache = get_xtc_index(self.fio)
+        self.has_cache = True
+
+    def load_cache(self, indexfile):
+
+        xtc_stat = os.stat(self.filename)
+        c_time = int(xtc_stat.st_ctime)
+        m_time = int(xtc_stat.st_mtime)
+        size = xtc_stat.st_size
+
+        with open(indexfile, 'rb') as fd:
+            unpacker = Unpacker(SubscriptableReader(fd))
+
+            if unpacker.unpack_hyper() != INDEX_MAGIC:
+                raise InvalidMagicException
+            if unpacker.unpack_hyper() != c_time:
+                raise InvalidIndexException
+            if unpacker.unpack_hyper() != m_time:
+                raise InvalidIndexException
+            if unpacker.unpack_hyper() != size:
+                raise InvalidIndexException
+
+            self._cache = array('L')
+            self._times = array('f')
+
+            try:
+                while True:
+                    self._cache.append(unpacker.unpack_hyper())
+                    self._times.append(unpacker.unpack_float())
+            except EOFError:
+                pass
         self.has_cache = True
 
     def __cinit__(self):
         self.has_cache = False
 
-    def __init__(self, filename, make_cache=True):
+    def __init__(self, filename, indexfile=None, make_cache=False):
         if isinstance(filename, str):
             filename = filename.encode()
+        self._filename = filename
 
         cdef:
             int step
@@ -103,11 +161,21 @@ cdef class XTCReader:
         self.fio = open_xtc(filename, b'r')
         read_first_xtc(self.fio, &self.natoms, &step, &time, box, &x, &prec, &_bOK)
 
+        if indexfile is not None:
+            try:
+                self.load_cache(indexfile)
+            except InvalidIndexException:
+                if make_cache:
+                    pass
+                else:
+                    raise
+
         if make_cache:
             self.make_cache()
 
     def __len__(self):
-        return len(self.cache)
+        if self.has_cache:
+            return len(self.cache)
 
     def __getitem__(self, frame):
         cdef matrix box
@@ -119,7 +187,12 @@ cdef class XTCReader:
             read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
                 <rvec *>coords.data, &self.prec, &_bOK)
             if _bOK:
-                return coords
+                frame = XTCFrame()
+                frame._coordinates = coords
+                frame.index = self.cur_step
+                frame.time = time
+                frame.box = box
+                return frame
             else:
                 raise
         else:
