@@ -67,6 +67,9 @@ cdef array get_xtc_index(t_fileio *fio):
     return cache[:-1]
 
 
+class XTCError(Exception): pass
+
+
 cdef class XTCReader:
     cdef:
         t_fileio *fio
@@ -157,6 +160,11 @@ cdef class XTCReader:
             gmx_bool _bOK
             real time, prec
             rvec *x
+
+        if not os.path.exists(filename):
+            raise OSError('File not found: {}'.format(filename))
+        if filename.decode().split('.')[-1] != 'xtc':
+            raise XTCError('File is not of xtc type: {}'.format(filename))
 
         self.fio = open_xtc(filename, b'r')
         read_first_xtc(self.fio, &self.natoms, &step, &time, box, &x, &prec, &_bOK)
