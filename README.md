@@ -40,3 +40,13 @@ Navigate to the top folder of the repository and run the command
     python setup.py install
 
 This builds the cython modules and installs them into the local python distribution.
+
+
+### Deploy on intranet
+
+For any installed version of mdevaluate modules do:
+
+    version=dev # or maybe: version=$(python ../mdevaluate/setup.py --version)
+    module load gromacs/5.1
+    module load mdevaluate/$version
+    python setup.py install --prefix=/autohome/niels/modules/mdevaluate-$version
