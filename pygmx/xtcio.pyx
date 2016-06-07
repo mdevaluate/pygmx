@@ -11,7 +11,8 @@ import os
 from utility cimport *
 from math cimport *
 from fileio cimport *
-from gromacs.reader import InvalidIndexException, InvalidMagicException, INDEX_MAGIC, SubscriptableReader, XTCFrame
+from .gromacs.reader import INDEX_MAGIC, SubscriptableReader, XTCFrame
+from .errors import InvalidIndexException, InvalidMagicException, XTCError
 
 
 cdef extern from "gromacs/fileio/xtcio.h":
@@ -65,9 +66,6 @@ cdef array get_xtc_index(t_fileio *fio):
         cache.append(gmx_fio_ftell(fio))
     # the last index is invalid
     return cache[:-1]
-
-
-class XTCError(Exception): pass
 
 
 cdef class XTCReader:
