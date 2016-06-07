@@ -76,7 +76,7 @@ cdef class XTCReader:
         bint has_cache, has_times
         rvec *coords
         array _cache, _times
-        char *_filename
+        public str filename
 
     @property
     def cache(self):
@@ -102,9 +102,9 @@ cdef class XTCReader:
             self._times.append(t)
         self.has_times = True
 
-    @property
-    def filename(self):
-        return self._filename.decode()
+#    @property
+#    def filename(self):
+#        return self._filename.decode()
 
     def seek(self, int frame):
         if self.has_cache:
@@ -146,11 +146,14 @@ cdef class XTCReader:
 
     def __cinit__(self):
         self.has_cache = False
+        self.has_times = False
 
     def __init__(self, filename, indexfile=None, make_cache=False):
         if isinstance(filename, str):
+            self.filename = filename
             filename = filename.encode()
-        self._filename = filename
+        else:
+            self.filename = filename.decode()
 
         cdef:
             int step
