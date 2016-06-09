@@ -68,7 +68,7 @@ cdef atoms_from_topology(gmx_mtop_t *topology):
             mol_atoms.append((
                 resid,
                 resname,
-                c_atoms.atomname[0][i_atom],
+                c_atoms.atomname[i_atom][0],
             ))
             mol_q.append(c_atoms.atom[i_atom].q)
             mol_m.append(c_atoms.atom[i_atom].m)
