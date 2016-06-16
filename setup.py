@@ -5,54 +5,53 @@ from Cython.Build import cythonize
 import numpy
 
 
-def locate_lib(directory, lib):
-    flib = 'lib{}.so'.format(lib)
-    for root, dirs, files in os.walk(directory):
-        if flib in files:
-            return root
+def check_header_version(include_path):
+    with open(os.path.join(include_path, 'version.h')) as f:
+        for l in f.readlines():
+            if '#define GMX_API_VERSION' in l:
+                print(l)
+                version = int(l.split()[-1])
+                assert version >= 50100, 'Installed gromacs version is too low!'
+                return
+    print('Gromacs version could not be checked.')
 
+include_dirs = [numpy.get_include()]
 
-include_dirs = [numpy.get_include(), 'gromacs/src', 'gromacs/src/external/tng_io/include']
-library_dirs = []
-if 'LD_LIBRARY_PATH' in os.environ:
-    lib = os.environ['LD_LIBRARY_PATH'].split(':')[0]
-    library_dirs.insert(0, locate_lib(lib, 'gromacs'))
-    include = lib.replace('/lib', '/include')
+if 'gromacs' in os.environ.get('LD_LIBRARY_PATH', ''):
+    for p in os.environ['LD_LIBRARY_PATH'].split(':'):
+        if 'gromacs' in p:
+            lib = p
+    gmx_root = lib.split('lib')[0]
+    include = os.path.join(gmx_root, 'include')
     if os.path.exists(include):
-        include_dirs.insert(0, include)
-elif os.path.exists('gromacs/build/lib'):
-    library_dirs.insert(0, 'gromacs/build/lib')
-
-if not library_dirs:
-    raise OSError("""
-        Gromacs library not found.
-        Activate a gromacs module or set environment variable LD_LIBRARY_PATH.
-        """)
-
-library_dirs.append('gromacs/src/external/tng_io/build/lib')
-
-library_dirs = [os.path.abspath(p) for p in library_dirs]
-
+        include_dirs.append(include)
+        check_header_version(include)
 
 extensions = [
-     Extension('pygmx.gromacs.coordinates', [
-               'pygmx/gromacs/coordinates.pyx'], include_dirs=include_dirs),
-     Extension('pygmx.gromacs.logarithmic', [
-               'pygmx/gromacs/logarithmic.pyx'], include_dirs=include_dirs),
-    Extension('pygmx.tpxio',
-              sources=['pygmx/tpxio.pyx'],
-              include_dirs=include_dirs,
-              libraries=['gromacs'],
-              library_dirs=library_dirs,
-              runtime_library_dirs=library_dirs,
-              language='c++'),
-    Extension('pygmx.xtcio',
-              sources=['pygmx/xtcio.pyx'],
-              include_dirs=include_dirs,
-              libraries=['gromacs'],
-              library_dirs=library_dirs,
-              runtime_library_dirs=library_dirs,
-              language='c++'),
+    Extension(
+        'pygmx.gromacs.coordinates',
+        ['pygmx/gromacs/coordinates.pyx'],
+        include_dirs=include_dirs
+    ),
+    Extension(
+        'pygmx.gromacs.logarithmic',
+        ['pygmx/gromacs/logarithmic.pyx'],
+        include_dirs=include_dirs
+    ),
+    Extension(
+        'pygmx.tpxio',
+        sources=['pygmx/tpxio.pyx'],
+        include_dirs=include_dirs,
+        libraries=['gromacs'],
+        language='c++'
+    ),
+    Extension(
+        'pygmx.xtcio',
+        sources=['pygmx/xtcio.pyx'],
+        include_dirs=include_dirs,
+        libraries=['gromacs'],
+        language='c++'
+    ),
 #    Extension('pygmx.enxio',
 #              sources=['pygmx/enxio.pyx'],
 #              include_dirs=include_dirs,
@@ -69,12 +68,11 @@ extensions = [
 #              runtime_library_dirs=library_dirs,
               #language='c++'
 #              ),
-
 ]
 
 setup(
     name='pygmx',
-    description='Python wrapper for gromacs library.',
+    description='Python wrapper around the gromacs library for file io.',
     author_email='niels.mueller@physik.tu-darmstadt.de',
     packages=['pygmx', 'pygmx.gromacs'],
     version='0.1',
