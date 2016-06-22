@@ -49,37 +49,31 @@ cdef atoms_from_topology(gmx_mtop_t *topology):
         int moltype, resind
 
     atoms = []
-    masses = []
-    charges = []
     residues = []
+    res_id = 0
     for i_molblock in range(topology.nmolblock):
         moltype = topology.molblock[i_molblock].type
-
         c_atoms = topology.moltype[moltype].atoms
-        mol_atoms = []
-        mol_q = []
-        mol_m = []
-        for i_atom in range(c_atoms.nr):
-            resind = c_atoms.atom[i_atom].resind
-            resname = c_atoms.resinfo[resind].name[0]
-            if resname not in residues:
-                residues.append(resname)
-            resid = residues.index(resname) + 1
-            mol_atoms.append((
-                resid,
-                resname,
-                c_atoms.atomname[i_atom][0],
-            ))
-            mol_q.append(c_atoms.atom[i_atom].q)
-            mol_m.append(c_atoms.atom[i_atom].m)
-        n_mol = topology.molblock[i_molblock].nmol
-        atoms += mol_atoms * n_mol
-        charges += mol_q * n_mol
-        masses += mol_m * n_mol
-
+        for n in range(topology.molblock[i_molblock].nmol):
+            mol_atoms = []
+            res_id += 1
+            for i_atom in range(c_atoms.nr):
+                resind = c_atoms.atom[i_atom].resind
+                resname = c_atoms.resinfo[resind].name[0]
+                if resname not in residues:
+                    residues.append(resname)
+                resid = residues.index(resname) + 1
+                mol_atoms.append((
+                    res_id,
+                    resname,
+                    c_atoms.atomname[i_atom][0],
+                ))
+            atoms += mol_atoms
     return np.array(atoms)
 
+
 ctypedef object (*atom_func)(t_atom)
+
 
 cdef atom_charge(t_atom atom):
     return atom.q
