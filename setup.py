@@ -15,10 +15,12 @@ def check_header_version(include_path):
     print('Gromacs version could not be checked.')
 
 include_dirs = [numpy.get_include()]
+library_dirs = []
 
 if 'gromacs' in os.environ.get('LD_LIBRARY_PATH', ''):
     for p in os.environ['LD_LIBRARY_PATH'].split(':'):
         if 'gromacs' in p:
+            library_dirs.append(p)
             lib = p
     gmx_root = lib.split('lib')[0]
     include = os.path.join(gmx_root, 'include')
@@ -42,6 +44,7 @@ extensions = [
         sources=['pygmx/tpxio.pyx'],
         include_dirs=include_dirs,
         libraries=['gromacs'],
+        library_dirs=library_dirs,
         language='c++'
     ),
     Extension(
@@ -49,6 +52,7 @@ extensions = [
         sources=['pygmx/xtcio.pyx'],
         include_dirs=include_dirs,
         libraries=['gromacs'],
+        library_dirs=library_dirs,
         language='c++'
     ),
 #    Extension('pygmx.enxio',
