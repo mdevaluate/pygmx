@@ -6,7 +6,7 @@ import numpy
 
 
 def check_header_version(include_path):
-    with open(os.path.join(include_path, 'version.h')) as f:
+    with open(os.path.join(include_path, 'gromacs/version.h')) as f:
         for l in f.readlines():
             if '#define GMX_API_VERSION' in l:
                 print(l)
