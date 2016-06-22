@@ -24,7 +24,7 @@ def open(filename):
         if ext in ['xtc']:
             indexfile = index_filename_for_xtc(filename)
             if not os.path.exists(indexfile):
-                print('Gneerating Index for xtc file. This may take a while...')
+                print('Generating Index for xtc file. This may take a while...')
                 index_xtcfile(filename)
             return FILE_EXTENSIONS[ext](filename, indexfile)
         else:
