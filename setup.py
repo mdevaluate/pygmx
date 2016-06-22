@@ -9,7 +9,6 @@ def check_header_version(include_path):
     with open(os.path.join(include_path, 'gromacs/version.h')) as f:
         for l in f.readlines():
             if '#define GMX_API_VERSION' in l:
-                print(l)
                 version = int(l.split()[-1])
                 assert version >= 50100, 'Installed gromacs version is too low!'
                 return
