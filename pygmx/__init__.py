@@ -1,5 +1,8 @@
 """
-Python wrapper for the gromacs library.
+Python wrapper for the gromacs library for their file formats.
+
+Currently this supports xtc and tpr files within the `open` function.
+Trajectories in trr format may be read with `.gromacs.reader.TRRReader`, which is experimental.
 """
 
 import os
@@ -18,7 +21,7 @@ FILE_EXTENSIONS = {
 
 
 def open(filename):
-    """Open a supported gromacs file with the appropiate reader."""
+    """Open a supported gromacs file. Currently supported file formats: tpr, xtc."""
     ext = filename.split('.')[-1]
     if ext in FILE_EXTENSIONS:
         if ext in ['xtc']:
