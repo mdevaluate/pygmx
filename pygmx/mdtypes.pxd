@@ -2,14 +2,14 @@
 from utility cimport *
 from math cimport *
 
-cdef extern from "gromacs/legacyheaders/types/energy.h":
+cdef extern from "gromacs/trajectory/energy.h":
     ctypedef struct t_energy:
         real    e
         double  eav
         double  esum
-        
 
-cdef extern from "gromacs/legacyheaders/types/inputrec.h":
+
+cdef extern from "gromacs/mdtypes/inputrec.h":
     ctypedef struct t_simtemp:
         pass
     ctypedef struct t_lambda:

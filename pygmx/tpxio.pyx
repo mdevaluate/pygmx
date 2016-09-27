@@ -34,7 +34,7 @@ cdef extern from "gromacs/fileio/tpxio.h":
                  int *natoms,
                  rvec *x,
                  rvec *v,
-                 rvec *f,
+                 # rvec *f,
                  gmx_mtop_t *mtop)
 
 
@@ -83,12 +83,17 @@ cdef atom_mass(t_atom atom):
     return atom.m
 
 
+cdef index_groups_from_topology(gmx_mtop_t *topology):
+    # retrieve the index groups from the topology->groups ?
+    pass
+
+
 cdef open_tpx(const char* filename, t_inputrec *ir, matrix box, int *natoms, gmx_mtop_t *top):
     #cdef stdio.FILE *old_stderr = stdio.stderr
     #stdio.stderr = stdio.freopen('tmp', 'w', stdio.stderr)
     cdef char buffer[stdio.BUFSIZ]
     stdio.setbuf(stdio.stderr, buffer)
-    return_code = read_tpx(filename, ir, box, natoms, NULL, NULL, NULL, top)
+    return_code = read_tpx(filename, ir, box, natoms, NULL, NULL, top)
 
     for i in range(stdio.BUFSIZ):
         buffer[i] = 0

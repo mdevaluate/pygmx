@@ -43,6 +43,10 @@ cdef extern from "gromacs/topology/atoms.h":
     ctypedef struct t_atomtypes:
         pass
 
+    ctypedef struct t_grps:
+        int   nr;                   # Number of different groups           */
+        int  *nm_ind;               # Index in the group names             */
+
 #ctypedef t_atoms *t_atoms_ptr
 
 cdef extern from "gromacs/topology/symtab.h":
@@ -81,6 +85,11 @@ cdef extern from "gromacs/topology/topology.h":
 
     ctypedef struct gmx_groups_t:
         pass
+#        t_grps            grps[0]   # Groups of things                     */
+#        int               ngrpname      # Number of groupnames                 */
+#        char           ***grpname       # Names of the groups                  */
+#        int               ngrpnr[0]
+#        unsigned char    *grpnr[0]  # Group numbers or NULL                */
 
     ctypedef struct gmx_mtop_t:
         char           **name       # Name of the topology                 */

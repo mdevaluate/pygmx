@@ -1,7 +1,10 @@
 # C-API in gromacs/utility
 
+from libc.stdint cimport int64_t
+
 #cdef extern from "inttypes.h":
 ctypedef unsigned long __int64
+ctypedef int64_t gmx_int64_t
 
 cdef extern from "gromacs/utility/basedefinitions.h":
     ctypedef int gmx_bool

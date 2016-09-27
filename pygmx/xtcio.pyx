@@ -21,11 +21,11 @@ cdef extern from "gromacs/fileio/xtcio.h":
     void close_xtc(t_fileio *fio)
 
     int read_first_xtc(t_fileio *fio,
-                       int *natoms, int *step, real *time,
+                       int *natoms, gmx_int64_t *step, real *time,
                        matrix box, rvec **x, real *prec, gmx_bool *_bOK)
 
     int read_next_xtc(t_fileio *fio,
-                      int natoms, int *step, real *time,
+                      int natoms, gmx_int64_t *step, real *time,
                       matrix box, rvec *x, real *prec, gmx_bool *_bOK)
 
 
@@ -53,7 +53,8 @@ else:
 cdef array get_xtc_index(t_fileio *fio):
     cdef:
         gmx_bool _bOK
-        int natoms, step, frame, state = 1
+        int natoms, frame, state = 1
+        gmx_int64_t step
         real time, prec
         matrix box
         rvec *x
@@ -156,7 +157,7 @@ cdef class XTCReader:
             self.filename = filename.decode()
 
         cdef:
-            int step
+            gmx_int64_t step
             matrix box
             gmx_bool _bOK
             real time, prec
@@ -193,7 +194,7 @@ cdef class XTCReader:
         cdef np.ndarray[real, ndim=2] coords = np.empty((self.natoms, 3), dtype=np_real)
         if frame < len(self):
             self.seek(frame)
-            read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
+            read_next_xtc(self.fio, self.natoms, <gmx_int64_t *>self.cur_step, &time, box,
                 <rvec *>coords.data, &self.prec, &_bOK)
             if _bOK:
                 frame = XTCFrame()
