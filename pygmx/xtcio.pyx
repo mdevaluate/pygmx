@@ -72,7 +72,8 @@ cdef array get_xtc_index(t_fileio *fio):
 cdef class XTCReader:
     cdef:
         t_fileio *fio
-        int natoms, cur_step
+        int natoms
+        gmx_int64_t cur_step
         real start_time, timestep, prec, cur_time
         bint has_cache, has_times
         rvec *coords
@@ -194,7 +195,7 @@ cdef class XTCReader:
         cdef np.ndarray[real, ndim=2] coords = np.empty((self.natoms, 3), dtype=np_real)
         if frame < len(self):
             self.seek(frame)
-            read_next_xtc(self.fio, self.natoms, <gmx_int64_t *>self.cur_step, &time, box,
+            read_next_xtc(self.fio, self.natoms, &self.cur_step, &time, box,
                 <rvec *>coords.data, &self.prec, &_bOK)
             if _bOK:
                 frame = XTCFrame()
