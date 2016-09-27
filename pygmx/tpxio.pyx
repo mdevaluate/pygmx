@@ -183,6 +183,30 @@ cdef class TPXReader:
                 types += mol_type * nmol
             return np.array(types)
 
+    @property
+    def nsteps(self):
+        return self.input_record.nsteps
+
+    @property
+    def nstxout(self):
+        return self.input_record.nstxout
+
+    @property
+    def nstvout(self):
+        return self.input_record.nstvout
+
+    @property
+    def nstfout(self):
+        return self.input_record.nstfout
+
+    @property
+    def nstxout_compressed(self):
+        return self.input_record.nstxout_compressed
+        
+    @property
+    def nstenergy(self):
+        return self.input_record.nstenergy
+
 
     def __cinit__(self, filename):
         filename = cstr(filename)
