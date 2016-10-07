@@ -59,39 +59,23 @@ cdef class EDRFile:
             types.append((self.etypes[i].name.decode(), self.etypes[i].unit.decode()))
         return types
 
-    def read(self, steps=None):
+    def read(self):
         cdef:
             t_enxframe *frame
-            np.ndarray[float, ndim=2] energies
-            np.ndarray[float, ndim=1] times
-        if steps is None:
-            energies = np.empty((1,self.n_etypes), np.float32)
-            times = np.empty((1,), np.float32)
-        else:
-            energies = np.empty((steps,self.n_etypes), np.float32)
-            times = np.empty((steps,), np.float32)
         snew(frame, 1)
+        energies = array('f')
+        times = array('f')
 
         i = 0
-        while True:
-            cont = do_enx(self.efile, frame)
-
+        while do_enx(self.efile, frame):
+            times.append(frame.t)
             for j in range(frame.nre):
-                energies[i, j] = frame.ener[j].e
-            times[i] = frame.t
-
-            if cont:
-                i += 1
-                if len(energies) <= i:
-                    energies = np.resize(energies, (len(energies)+1, self.n_etypes))
-                    times = np.resize(times, (len(times)+1,))
-            else:
-                break
+                energies.append(frame.ener[j].e)
 
         free_enxframe(frame)
         sfree(frame)
 
-        return times, energies
+        return np.array(times), np.array(energies).reshape(len(times), self.n_etypes)
 
 
     def __init__(self, filename):
@@ -101,7 +85,6 @@ cdef class EDRFile:
 
         self.etypes = NULL
         do_enxnms(self.efile, &self.n_etypes, &self.etypes)
-        print(self.n_etypes)
 
         #do_enx(self.efile, self.frames)
 
