@@ -14,7 +14,7 @@ def check_header_version(include_path):
                 return
     print('Gromacs version could not be checked.')
 
-include_dirs = [numpy.get_include()]
+include_dirs = []
 library_dirs = []
 
 if 'gromacs' in os.environ.get('LD_LIBRARY_PATH', ''):
