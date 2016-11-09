@@ -22,11 +22,11 @@ if 'gromacs' in os.environ.get('LD_LIBRARY_PATH', ''):
         if 'gromacs' in p:
             library_dirs.append(p)
             lib = p
-    gmx_root = lib.split('lib')[0]
-    include = os.path.join(gmx_root, 'include')
-    if os.path.exists(include):
-        include_dirs.append(include)
-        check_header_version(include)
+            gmx_root = lib.split('lib')[0]
+            include = os.path.join(gmx_root, 'include')
+            if os.path.exists(include):
+                include_dirs.append(include)
+                check_header_version(include)
 
 extensions = [
     Extension(

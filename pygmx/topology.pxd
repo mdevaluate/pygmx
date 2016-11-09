@@ -1,4 +1,6 @@
 
+from libc.stdio cimport FILE
+
 from utility cimport *
 from math cimport *
 from mdtypes cimport *
@@ -60,11 +62,32 @@ cdef extern from "gromacs/topology/block.h":
         pass
 
 cdef extern from "gromacs/topology/idef.h":
-  ctypedef struct t_ilist:
-    pass
+    ctypedef struct t_ilist:
+        pass
 
-  ctypedef struct gmx_ffparams_t:
-    pass
+    cdef enum t_ft_enum:
+        F_LJ
+
+    ctypedef union t_iparams:
+        pass
+
+    ctypedef int t_functype
+
+    ctypedef struct gmx_cmap_t:
+        pass
+
+    ctypedef struct gmx_ffparams_t:
+        int         ntypes;
+        int         atnr;
+        t_functype *functype;
+        t_iparams  *iparams;
+        double      reppow;    # The repulsion power for VdW: C12*r^-reppow   */
+        real        fudgeQQ;   # The scaling factor for Coulomb 1-4: f*q1*q2  */
+        gmx_cmap_t  cmap_grid; # The dihedral correction maps                 */
+
+
+    void pr_ffparams(FILE *fp, int indent, const char *title,
+                     const gmx_ffparams_t *ffparams, gmx_bool bShowNumbers)
 
 cdef extern from "gromacs/topology/topology.h":
     ctypedef struct gmx_moltype_t:

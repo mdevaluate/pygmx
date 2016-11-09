@@ -102,6 +102,17 @@ cdef open_tpx(const char* filename, t_inputrec *ir, matrix box, int *natoms, gmx
     stdio.setbuf(stdio.stderr, NULL)
     return return_code
 
+
+cdef read_ffparams(gmx_ffparams_t *ffparams, gmx_bool bShowNumbers):
+    cdef char buffer[stdio.BUFSIZ]
+    stdio.setbuf(stdio.stdout, buffer)
+    pr_ffparams(stdio.stdout, 0, '', ffparams, bShowNumbers)
+    stdio.fflush(stdio.stderr)
+    stdio.fseek(stdio.stderr, 0, stdio.SEEK_END)
+    stdio.setbuf(stdio.stderr, NULL)
+    return buffer
+
+
 cdef class TPXReader:
     cdef:
         t_tpxheader header
@@ -202,11 +213,14 @@ cdef class TPXReader:
     @property
     def nstxout_compressed(self):
         return self.input_record.nstxout_compressed
-        
+
     @property
     def nstenergy(self):
         return self.input_record.nstenergy
 
+
+    def read_ff(self):
+        return read_ffparams(&self.topology.ffparams, True)
 
     def __cinit__(self, filename):
         filename = cstr(filename)
