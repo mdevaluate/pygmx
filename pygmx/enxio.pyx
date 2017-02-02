@@ -2,7 +2,7 @@
 from cpython.array cimport array
 from array import array
 
-cimport numpy as np
+#cimport numpy as np
 import numpy as np
 
 from utility cimport *

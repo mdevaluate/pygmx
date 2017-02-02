@@ -4,7 +4,7 @@
 from libc cimport stdio
 
 import numpy as np
-cimport numpy as np
+#cimport numpy as np
 
 from utility cimport *
 from math cimport *

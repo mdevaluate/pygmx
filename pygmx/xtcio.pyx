@@ -76,7 +76,6 @@ cdef class XTCReader:
         gmx_int64_t cur_step
         real start_time, timestep, prec, cur_time
         bint has_cache, has_times
-        rvec *coords
         array _cache, _times
         public str filename
 
@@ -208,3 +207,33 @@ cdef class XTCReader:
                 raise
         else:
             raise IndexError('Frame {} is out of range for trajectory of length {}.'.format(frame, len(self)))
+
+    def __getstate__(self):
+        # state = self.__dict__.copy()
+        state = {}
+        state['natoms'] = self.natoms
+        state['cur_step'] = self.cur_step
+        state['start_time'] = self.start_time
+        state['timestep'] = self.timestep
+        state['prec'] = self.prec
+        state['cur_time'] = self.cur_time
+        state['has_cache'] = self.has_cache
+        state['has_times'] = self.has_times
+        state['_cache'] = self._cache
+        state['filename'] = self.filename
+        return state
+
+    def __setstate__(self, state):
+        self.natoms = state.pop('natoms')
+        self.cur_step = state.pop('cur_step')
+        self.start_time = state.pop('start_time')
+        self.timestep = state.pop('timestep')
+        self.prec = state.pop('prec')
+        self.cur_time = state.pop('cur_time')
+        self.has_cache = state.pop('has_cache')
+        self.has_times = state.pop('has_times')
+        self._cache = state.pop('_cache')
+        self.filename = state.pop('filename')
+        self.fio = open_xtc(self.filename.encode(), b'r')
+
+        #self.__dict__.update(state)
