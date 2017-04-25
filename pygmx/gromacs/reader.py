@@ -6,6 +6,8 @@ from functools import partial
 import numpy as np
 import hashlib
 
+from ..errors import InvalidIndexException, InvalidMagicException
+
 TRR_MAGIC = 1993
 XTC_MAGIC = 1995
 INDEX_MAGIC = 2015
@@ -88,12 +90,12 @@ class NumpyUnpacker(xdrlib.Unpacker):
         return ret
 
 
-class InvalidMagicException(Exception):
-    pass
+# class InvalidMagicException(Exception):
+#    pass
 
 
-class InvalidIndexException(Exception):
-    pass
+# class InvalidIndexException(Exception):
+#     pass
 
 
 class UnknownLenError(Exception):
