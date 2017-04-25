@@ -9,14 +9,15 @@ import os
 
 from .tpxio import TPXReader
 from .xtcio import XTCReader
-# from .enxio import EDRFile
+from .enxio import EDRFile
 from .errors import FileTypeError
 from .gromacs.reader import index_filename_for_xtc
 from .gromacs.xtcindex import index_xtcfile
 
 FILE_EXTENSIONS = {
     'xtc': XTCReader,
-    'tpr': TPXReader
+    'tpr': TPXReader,
+    'edr': EDRFile,
 }
 
 

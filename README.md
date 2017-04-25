@@ -17,6 +17,14 @@ Pygmx needs mainly two python packages to be installed, which are available in a
 
 Pygmx requires the shared library and header files of Gromacs 5.1 or higher to be installed.
 
+Note that pygmx also supports the Gromacs-2016 version.
+Checkout the followng git branch if this version of Gromacs is desired:
+
+    git checkout gromacs-2016
+
+Note that Gromacs is backwards compatible, i. e. files produced by the 5.1 version will also work in the 2016 version.
+But Gromacs-2016 is required to load files of the 2016 version.
+
 #### Using a module
 
 If gromacs is installed as a module in your system, run

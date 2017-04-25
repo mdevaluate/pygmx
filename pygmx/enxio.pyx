@@ -2,7 +2,7 @@
 from cpython.array cimport array
 from array import array
 
-cimport numpy as np
+#cimport numpy as np
 import numpy as np
 
 from utility cimport *
@@ -40,6 +40,7 @@ cdef extern from "gromacs/fileio/enxio.h":
 
     gmx_bool do_enx(ener_file_t ef, t_enxframe *fr)
 
+    void free_enxframe(t_enxframe *ef)
 
 
 cdef class EDRFile:
@@ -52,22 +53,29 @@ cdef class EDRFile:
 
     @property
     def types(self):
+
         types = []
         for i in range(self.n_etypes):
-            types.append(
+            types.append((self.etypes[i].name.decode(), self.etypes[i].unit.decode()))
+        return types
 
-            )
     def read(self):
-        cdef t_enxframe *frame
-        cdef np.ndarray[float, ndim=2] energies = np.empty((1,self.n_etypes), np.float32)
-
+        cdef:
+            t_enxframe *frame
         snew(frame, 1)
+        energies = array('f')
+        times = array('f')
 
+        i = 0
         while do_enx(self.efile, frame):
-            energies = np.resize(energies, (len(energies)+1, self.n_etypes))
-            for i in range(frame.nre):
-                energies[-1, i] = frame.ener[i].e
-        return energies
+            times.append(frame.t)
+            for j in range(frame.nre):
+                energies.append(frame.ener[j].e)
+
+        free_enxframe(frame)
+        sfree(frame)
+
+        return np.array(times), np.array(energies).reshape(len(times), self.n_etypes)
 
 
     def __init__(self, filename):
@@ -77,7 +85,6 @@ cdef class EDRFile:
 
         self.etypes = NULL
         do_enxnms(self.efile, &self.n_etypes, &self.etypes)
-        print(self.n_etypes)
 
         #do_enx(self.efile, self.frames)
 

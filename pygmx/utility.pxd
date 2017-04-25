@@ -1,11 +1,11 @@
 # C-API in gromacs/utility
 
-#cdef extern from "inttypes.h":
-ctypedef unsigned long __int64
+from libc.stdint cimport int64_t
+
 
 cdef extern from "gromacs/utility/basedefinitions.h":
     ctypedef int gmx_bool
-    ctypedef __int64 gmx_int64_t
+    ctypedef int64_t gmx_int64_t
 
 cdef extern from "gromacs/utility/real.h":
     ctypedef double real
@@ -15,6 +15,7 @@ cdef extern from "gromacs/utility/futil.h":
 
 cdef extern from "gromacs/utility/smalloc.h":
     void snew(void *ptr, int nelem)
+    void sfree(void *ptr)
 
 
 cdef inline cstr(instr):
