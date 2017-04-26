@@ -1,6 +1,8 @@
 #!/bin/bash -l
 
 module load mdevaluate/dev
+which python
+echo $PATH
 python --version
 TMPDIR="./tmp"
 PYVERSION="$(python -c 'import sys; print("python{}.{}".format(sys.version_info.major, sys.version_info.minor))')"
