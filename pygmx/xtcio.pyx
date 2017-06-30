@@ -115,7 +115,7 @@ cdef class XTCReader:
         self._cache = get_xtc_index(self.fio)
         self.has_cache = True
 
-    def load_cache(self, indexfile):
+    def load_cache(self, indexfile, ignore_time=False):
 
         xtc_stat = os.stat(self.filename)
         c_time = int(xtc_stat.st_ctime)
@@ -127,9 +127,9 @@ cdef class XTCReader:
 
             if unpacker.unpack_hyper() != INDEX_MAGIC:
                 raise InvalidMagicException
-            if unpacker.unpack_hyper() != c_time:
+            if unpacker.unpack_hyper() != c_time and not ignore_time:
                 raise InvalidIndexException
-            if unpacker.unpack_hyper() != m_time:
+            if unpacker.unpack_hyper() != m_time and not ignore_time:
                 raise InvalidIndexException
             if unpacker.unpack_hyper() != size:
                 raise InvalidIndexException
@@ -149,7 +149,7 @@ cdef class XTCReader:
         self.has_cache = False
         self.has_times = False
 
-    def __init__(self, filename, indexfile=None, make_cache=False):
+    def __init__(self, filename, indexfile=None, make_cache=False, ignore_timestamps=False):
         if isinstance(filename, str):
             self.filename = filename
             filename = filename.encode()
@@ -173,7 +173,7 @@ cdef class XTCReader:
 
         if indexfile is not None:
             try:
-                self.load_cache(indexfile)
+                self.load_cache(indexfile, ignore_time=ignore_timestamps)
             except InvalidIndexException:
                 if make_cache:
                     pass

@@ -21,7 +21,7 @@ FILE_EXTENSIONS = {
 }
 
 
-def open(filename):
+def open(filename, ignore_index_timestamps=False):
     """Open a supported gromacs file. Currently supported file formats: tpr, xtc."""
     ext = filename.split('.')[-1]
     if ext in FILE_EXTENSIONS:
@@ -30,7 +30,7 @@ def open(filename):
             if not os.path.exists(indexfile):
                 print('Generating Index for xtc file. This may take a while...')
                 index_xtcfile(filename)
-            return FILE_EXTENSIONS[ext](filename, indexfile)
+            return FILE_EXTENSIONS[ext](filename, indexfile, ignore_timestamps=ignore_index_timestamps)
         else:
             return FILE_EXTENSIONS[ext](filename)
     else:
