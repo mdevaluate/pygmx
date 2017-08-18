@@ -16,9 +16,9 @@ from .errors import InvalidIndexException, InvalidMagicException, XTCError
 
 
 cdef extern from "gromacs/fileio/xtcio.h":
-    t_fileio *open_xtc(const char *filename, const char *mode)
+    t_fileio *open_xtc(const char *filename, const char *mode) nogil
 
-    void close_xtc(t_fileio *fio)
+    void close_xtc(t_fileio *fio) nogil
 
     int read_first_xtc(t_fileio *fio,
                        int *natoms, gmx_int64_t *step, real *time,
@@ -26,7 +26,7 @@ cdef extern from "gromacs/fileio/xtcio.h":
 
     int read_next_xtc(t_fileio *fio,
                       int natoms, gmx_int64_t *step, real *time,
-                      matrix box, rvec *x, real *prec, gmx_bool *_bOK)
+                      matrix box, rvec *x, real *prec, gmx_bool *_bOK) nogil
 
 
 if sizeof(real) == 4:
@@ -67,6 +67,33 @@ cdef array get_xtc_index(t_fileio *fio):
         cache.append(gmx_fio_ftell(fio))
     # the last index is invalid
     return cache[:-1]
+
+
+def read_xtcframe(fname, pos, natoms):
+    cdef t_fileio *fio = open_xtc(fname.encode(), 'r')
+    gmx_fio_seek(fio, pos)
+
+    cdef:
+        matrix box
+        gmx_bool _bOK
+        real time, prec
+        gmx_int64_t cur_step
+        np.ndarray[real, ndim=2] coords = np.empty((natoms, 3), dtype=np_real)
+        int nratms = natoms
+
+    with nogil:
+        read_next_xtc(fio, nratms, &cur_step, &time, box, <rvec *>coords.data, &prec, &_bOK)
+        close_xtc(fio)
+
+    if _bOK:
+        frame = XTCFrame()
+        frame._coordinates = coords
+        frame.index = cur_step
+        frame.time = time
+        frame.box = box
+        return frame
+    else:
+        raise
 
 
 cdef class XTCReader:

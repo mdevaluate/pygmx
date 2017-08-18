@@ -8,7 +8,7 @@ Trajectories in trr format may be read with `.gromacs.reader.TRRReader`, which i
 import os
 
 from .tpxio import TPXReader
-from .xtcio import XTCReader
+from .xtcio import XTCReader, read_xtcframe
 from .enxio import EDRFile
 from .errors import FileTypeError
 from .gromacs.reader import index_filename_for_xtc
