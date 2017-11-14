@@ -135,7 +135,7 @@ class XTCFrame:
         self._coordinates = None
 
     @property
-    def coordinates(self):
+    def positions(self):
         if self._coordinates is None:
             self._coordinates = self._compressed_coordinates()
         return self._coordinates
