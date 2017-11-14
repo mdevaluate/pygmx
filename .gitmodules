@@ -1,3 +1,0 @@
-[submodule "gromacs"]
-	path = gromacs
-	url = git://git.gromacs.org/gromacs.git 
