@@ -27,7 +27,7 @@ if 'gromacs' in os.environ.get('LD_LIBRARY_PATH', ''):
             if os.path.exists(include):
                 include_dirs.append(include)
                 check_header_version(include)
-
+# übergebe library_dirs, damit beim linken die richtige version gefunden wird
 extensions = [
     Extension(
         'pygmx.gromacs.coordinates',
