@@ -1,6 +1,7 @@
 # Wrapper for xtcio.h: I/O for xtc files.
 
 from cpython.array cimport array
+import cython
 from array import array
 from xdrlib import Unpacker
 
@@ -28,6 +29,7 @@ cdef extern from "gromacs/fileio/xtcio.h":
                       int natoms, gmx_int64_t *step, real *time,
                       matrix box, rvec *x, real *prec, gmx_bool *_bOK) nogil
 
+    int write_xtc(t_fileio *fio, int natoms, gmx_int64_t step, real time, rvec *box, rvec *x, real prec)
 
 if sizeof(real) == 4:
     np_real = np.float32
@@ -264,3 +266,18 @@ cdef class XTCReader:
         self.fio = open_xtc(self.filename.encode(), b'r')
 
         #self.__dict__.update(state)
+
+
+@cython.binding(True)
+def append_xtcfile(filename, step, time, box, coords, prec):
+    if isinstance(filename, str):
+            filename = filename.encode()
+
+    cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
+    cdef np.ndarray[real, ndim=2] x = np.asarray(coords, dtype=np.float32)
+
+    cdef t_fileio *fio = open_xtc(filename, b'a')
+    write_xtc(fio, len(coords), step, time, <rvec *>b.data, <rvec *>x.data, <real> prec)
+
+
+    
