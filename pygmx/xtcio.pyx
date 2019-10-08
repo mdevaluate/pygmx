@@ -152,27 +152,33 @@ cdef class XTCReader:
         size = xtc_stat.st_size
 
         with open(indexfile, 'rb') as fd:
-            unpacker = Unpacker(SubscriptableReader(fd))
+            unpacker = Unpacker(fd.read())
+            # first 4 * 8 bytes are used for checks, followed by N * (8 + 4) bytes of data
+            length = int((len(unpacker.get_buffer()) - 32) / 12)
 
-            if unpacker.unpack_hyper() != INDEX_MAGIC:
-                raise InvalidMagicException
-            if unpacker.unpack_hyper() != c_time and not ignore_time:
-                raise InvalidIndexException
-            if unpacker.unpack_hyper() != m_time and not ignore_time:
-                raise InvalidIndexException
-            if unpacker.unpack_hyper() != size:
-                raise InvalidIndexException
+        if length < 0:
+            raise InvalidIndexException
 
-            self._cache = array('L')
-            self._times = array('f')
+        if unpacker.unpack_hyper() != INDEX_MAGIC:
+            raise InvalidMagicException
+        if unpacker.unpack_hyper() != c_time and not ignore_time:
+            raise InvalidIndexException
+        if unpacker.unpack_hyper() != m_time and not ignore_time:
+            raise InvalidIndexException
+        if unpacker.unpack_hyper() != size:
+            raise InvalidIndexException
 
-            try:
-                while True:
-                    self._cache.append(unpacker.unpack_hyper())
-                    self._times.append(unpacker.unpack_float())
-            except EOFError:
-                pass
+        self._cache = array('L')
+        self._times = array('f')
+
+        try:
+            while True:
+                self._cache.append(unpacker.unpack_hyper())
+                self._times.append(unpacker.unpack_float())
+        except EOFError:
+            pass
         self.has_cache = True
+        self.has_times = True
 
     def __cinit__(self):
         self.has_cache = False
