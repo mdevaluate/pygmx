@@ -284,6 +284,8 @@ def append_xtcfile(filename, step, time, box, coords, prec):
 
     cdef t_fileio *fio = open_xtc(filename, b'a')
     write_xtc(fio, len(coords), step, time, <rvec *>b.data, <rvec *>x.data, <real> prec)
+    close_xtc(fio)
+
 
 
     
