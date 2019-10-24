@@ -2,6 +2,7 @@
 # Cython wrapper around tpxio.cpp
 
 from libc cimport stdio
+from libc.string import memcpy
 
 import numpy as np
 import cython
@@ -262,7 +263,7 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
         int natoms = reader.topology.natoms
         gmx_mtop_t mtop 
         init_mtop(&mtop)
-        memcpy(&mtop, &reader.topology, sizeof(reader.topology))
+        memcpy(&mtop, &reader.topology, sizeof(mtop))
         t_topology top = gmx_mtop_t_to_t_topology(&mtop, True)
         gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
 
