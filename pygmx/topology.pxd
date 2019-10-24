@@ -157,11 +157,11 @@ cdef extern from "gromacs/topology/topology.h":
         t_blocka        excls                      # /* The exclusions                       */
         t_symtab        symtab                     # /* The symbol table                     */
 
-    ctypedef struct gmx_localtop_t
+    ctypedef struct gmx_localtop_t:
         t_idef        idef        # /* The interaction function definition  */
         #t_atomtypes   atomtypes   # /* Atomtype properties                  */
         #t_block       cgs         # /* The charge groups                    */
-        #t_blocka      excls       # /* The exclusions                       */
+        #   t_blocka      excls       # /* The exclusions                       */
 
     void init_mtop(gmx_mtop_t *mtop)
     void done_top(t_topology *top)
