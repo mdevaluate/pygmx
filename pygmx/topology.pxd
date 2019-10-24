@@ -157,6 +157,12 @@ cdef extern from "gromacs/topology/topology.h":
         t_blocka        excls                      # /* The exclusions                       */
         t_symtab        symtab                     # /* The symbol table                     */
 
+    typedef struct gmx_localtop_t
+        t_idef        idef        # /* The interaction function definition  */
+        t_atomtypes   atomtypes   # /* Atomtype properties                  */
+        t_block       cgs         # /* The charge groups                    */
+        t_blocka      excls       # /* The exclusions                       */
+
     void init_mtop(gmx_mtop_t *mtop)
     void done_top(t_topology *top)
 
@@ -166,6 +172,8 @@ cdef extern from "gromacs/topology/topology.h":
 cdef extern from "gromacs/topology/mtop_util.h":
     t_atoms gmx_mtop_global_atoms(const gmx_mtop_t *mtop)
     t_topology gmx_mtop_t_to_t_topology(gmx_mtop_t *mtop, bint freeMTop)
+    gmx_localtop_t *gmx_mtop_generate_local_top(const gmx_mtop_t *mtop, bool freeEnergyInteractionsAtEnd)
+
 
 
 cdef extern from "gromacs/pbcutil/rmpbc.h":
