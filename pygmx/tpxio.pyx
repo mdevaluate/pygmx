@@ -259,10 +259,6 @@ cdef class TPXReader:
 def make_xtcframe_whole(coords, box, TPXReader reader):
     
     cdef int natoms = reader.topology.natoms
-    #cdef gmx_mtop_t mtop 
-    #init_mtop(&mtop)
-    #memcpy(&mtop, &reader.topology, sizeof(mtop))
-    #cdef t_topology top = gmx_mtop_t_to_t_topology(&mtop, True)
     cdef gmx_localtop_t *top = gmx_mtop_generate_local_top(&reader.topology, True)
     cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
 
@@ -272,8 +268,6 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
     gmx_rmpbc(gpbc, natoms, <rvec *>b.data, <rvec *>x.data)
 
     # free up memory
-    #done_top(&top)
-    #sfree(top)
     gmx_rmpbc_done(gpbc)
     return x
 
