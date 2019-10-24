@@ -273,7 +273,7 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
 
     # free up memory
     #done_top(&top)
-    sfree(top)
+    #sfree(top)
     gmx_rmpbc_done(gpbc)
     return x
 
