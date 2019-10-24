@@ -5,7 +5,7 @@ from libc cimport stdio
 
 import numpy as np
 import cython
-#cimport numpy as np
+cimport numpy as np
 
 from utility cimport *
 from math cimport *
@@ -256,7 +256,7 @@ cdef class TPXReader:
 
 @cython.binding(True)
 def make_xtcframe_whole(coords, box, TPXReader reader):
-    cdef t_atoms atoms = gmx_mtop_global_atoms(reader.topology)
+    cdef t_atoms atoms = gmx_mtop_global_atoms(&reader.topology)
     cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
     cdef np.ndarray[real, ndim=2] x = np.asarray(coords, dtype=np.float32)
     rm_gropbc(&atoms, <rvec *>x.data, <matrix> b)
