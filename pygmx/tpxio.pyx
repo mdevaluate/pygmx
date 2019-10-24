@@ -257,12 +257,11 @@ cdef class TPXReader:
 
 @cython.binding(True)
 def make_xtcframe_whole(coords, box, TPXReader reader):
-    #cdef t_atoms atoms = gmx_mtop_global_atoms(&reader.topology)
-
+    
     cdef int natoms = reader.topology.natoms
     cdef gmx_mtop_t mtop 
     init_mtop(&mtop)
-    memcpy(&mtop, &reader.topology, sizeof(mtop))
+    memcpy(<void *>&mtop, <void *>&reader.topology, sizeof(mtop))
     cdef t_topology top = gmx_mtop_t_to_t_topology(&mtop, True)
     cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
 
