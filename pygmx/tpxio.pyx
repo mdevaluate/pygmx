@@ -267,6 +267,10 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
         np.ndarray[real, ndim=2] x = np.array(coords, dtype=np.float32).copy()
     
     gmx_rmpbc(gpbc, natoms, <rvec *>b.data, <rvec *>x.data)
+
+    # free up memory
+    done_top(&top)
+    gmx_rmpbc_done(gpbc)
     return x
 
 

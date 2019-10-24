@@ -157,6 +157,8 @@ cdef extern from "gromacs/topology/topology.h":
         t_blocka        excls                      # /* The exclusions                       */
         t_symtab        symtab                     # /* The symbol table                     */
 
+    void done_top(t_topology *top)
+
 # cdef extern from "gromacs/topology/topology.h":
         # generate a t_atoms struct for the system from gmx_mtop_t
         # t_atoms* mtop2atoms(gmx_mtop_t *mtop)
@@ -169,8 +171,8 @@ cdef extern from "gromacs/pbcutil/rmpbc.h":
     ctypedef struct gmx_rmpbc_t:
         pass
 
-    gmx_rmpbc_t gmx_rmpbc_init(const t_idef *idef, int ePBC, int natoms);
-
+    gmx_rmpbc_t gmx_rmpbc_init(const t_idef *idef, int ePBC, int natoms)
+    void gmx_rmpbc_done(gmx_rmpbc_t gpbc)
     void rm_gropbc(const t_atoms *atoms, rvec x[], const matrix box)
     void gmx_rmpbc(gmx_rmpbc_t gpbc, int natoms, const matrix box, rvec x[])
 
