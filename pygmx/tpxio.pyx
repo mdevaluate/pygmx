@@ -263,7 +263,7 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
     #init_mtop(&mtop)
     #memcpy(&mtop, &reader.topology, sizeof(mtop))
     #cdef t_topology top = gmx_mtop_t_to_t_topology(&mtop, True)
-    cdef gmx_localtop_t *top = gmx_mtop_generate_local_top(reader.topology, True)
+    cdef gmx_localtop_t *top = gmx_mtop_generate_local_top(&reader.topology, True)
     cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
 
     cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
