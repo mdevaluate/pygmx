@@ -68,6 +68,9 @@ cdef extern from "gromacs/topology/idef.h":
     ctypedef struct t_ilist:
         pass
 
+    ctypedef struct t_idef:
+        pass
+
     #cdef enum t_ft_enum:
     #    F_LJ
 
@@ -143,14 +146,34 @@ cdef extern from "gromacs/topology/topology.h":
         gmx_groups_t     groups
         t_symtab         symtab                      # The symbol table                     */
 
+    ctypedef struct t_topology:
+        char          **name                       # /* Name of the topology                 */
+        t_idef          idef                       # /* The interaction function definition  */
+        t_atoms         atoms                      # /* The atoms                            */
+        t_atomtypes     atomtypes                  # /* Atomtype properties                  */
+        t_block         cgs                        # /* The charge groups                    */
+        t_block         mols                       # /* The molecules                        */
+        gmx_bool        bIntermolecularInteractions# /* Inter.mol. int. ?   */
+        t_blocka        excls                      # /* The exclusions                       */
+        t_symtab        symtab                     # /* The symbol table                     */
+
 # cdef extern from "gromacs/topology/topology.h":
         # generate a t_atoms struct for the system from gmx_mtop_t
         # t_atoms* mtop2atoms(gmx_mtop_t *mtop)
 cdef extern from "gromacs/topology/mtop_util.h":
     t_atoms gmx_mtop_global_atoms(const gmx_mtop_t *mtop)
+    t_topology gmx_mtop_t_to_t_topology(gmx_mtop_t *mtop, bool freeMTop)
+
 
 cdef extern from "gromacs/pbcutil/rmpbc.h":
+    ctypedef struct gmx_rmpbc_t:
+        pass
+
+    gmx_rmpbc_t gmx_rmpbc_init(const t_idef *idef, int ePBC, int natoms);
+
     void rm_gropbc(const t_atoms *atoms, rvec x[], const matrix box)
+    void gmx_rmpbc(gmx_rmpbc_t gpbc, int natoms, const matrix box, rvec x[])
+
 
 
 

@@ -256,9 +256,17 @@ cdef class TPXReader:
 
 @cython.binding(True)
 def make_xtcframe_whole(coords, box, TPXReader reader):
-    cdef t_atoms atoms = gmx_mtop_global_atoms(&reader.topology)
-    cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
-    cdef np.ndarray[real, ndim=2] x = np.asarray(coords, dtype=np.float32)
-    rm_gropbc(&atoms, <rvec *>x.data, <rvec *>b.data)
+    #cdef t_atoms atoms = gmx_mtop_global_atoms(&reader.topology)
+
+    cdef:
+        int natoms = reader.topology.natoms
+        t_topology top = gmx_mtop_t_to_t_topology(&reader.topology, False)
+        gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
+
+        np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
+        np.ndarray[real, ndim=2] x = np.array(coords, dtype=np.float32).copy()
+    
+    gmx_rmpbc(gpbc, natoms, <rvec *>b.data, <rvec *>x.data)
     return x
+
 
