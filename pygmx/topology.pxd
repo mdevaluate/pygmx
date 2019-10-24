@@ -150,7 +150,7 @@ cdef extern from "gromacs/topology/mtop_util.h":
     t_atoms gmx_mtop_global_atoms(const gmx_mtop_t *mtop)
 
 cdef extern from "gromacs/pbcutil/rmpbc.h":
-    void rm_gropbc(const t_atoms *atoms, rvec x[], const matrix box);
+    void rm_gropbc(const t_atoms *atoms, rvec x[], const matrix box)
 
 
 
