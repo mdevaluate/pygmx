@@ -146,3 +146,11 @@ cdef extern from "gromacs/topology/topology.h":
 # cdef extern from "gromacs/topology/topology.h":
         # generate a t_atoms struct for the system from gmx_mtop_t
         # t_atoms* mtop2atoms(gmx_mtop_t *mtop)
+cdef extern from "gromacs/topology/mtop_util.h":
+    t_atoms gmx_mtop_global_atoms(const gmx_mtop_t *mtop)
+
+cdef extern from "gromacs/pbcutil/rmpbc.h":
+    void rm_gropbc(const t_atoms *atoms, rvec x[], const matrix box);
+
+
+
