@@ -260,7 +260,8 @@ def make_xtcframe_whole(coords, box, TPXReader reader):
 
     cdef:
         int natoms = reader.topology.natoms
-        t_topology top = gmx_mtop_t_to_t_topology(&reader.topology, False)
+        gmx_mtop_t mtop = reader.topology
+        t_topology top = gmx_mtop_t_to_t_topology(&mtop, True)
         gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
 
         np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
