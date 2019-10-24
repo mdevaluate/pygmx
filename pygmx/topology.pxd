@@ -157,6 +157,7 @@ cdef extern from "gromacs/topology/topology.h":
         t_blocka        excls                      # /* The exclusions                       */
         t_symtab        symtab                     # /* The symbol table                     */
 
+    void init_mtop(gmx_mtop_t *mtop)
     void done_top(t_topology *top)
 
 # cdef extern from "gromacs/topology/topology.h":
