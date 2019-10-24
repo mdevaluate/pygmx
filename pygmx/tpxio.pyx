@@ -2,7 +2,7 @@
 # Cython wrapper around tpxio.cpp
 
 from libc cimport stdio
-from libc.string import memcpy
+from libc.string cimport memcpy
 
 import numpy as np
 import cython
