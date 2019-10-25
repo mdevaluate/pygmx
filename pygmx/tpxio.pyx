@@ -120,6 +120,7 @@ cdef class TPXReader:
         t_tpxheader header
         t_inputrec input_record
         gmx_mtop_t topology
+        gmx_localtop_t *local_top
         real box[3][3]
         readonly int  n_atoms, n_tcouple_groups, n_mol
         readonly char *topology_name
@@ -253,14 +254,14 @@ cdef class TPXReader:
             &self.topology
         )
         self.topology_name = self.topology.name[0]
+        self.local_top = gmx_mtop_generate_local_top(&self.topology, True)
 
 
 @cython.binding(True)
 def make_xtcframe_whole(coords, box, TPXReader reader):
     
     cdef int natoms = reader.topology.natoms
-    cdef gmx_localtop_t *top = gmx_mtop_generate_local_top(&reader.topology, True)
-    cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
+    cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&reader.local_top.idef, -1, natoms)
 
     cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
     cdef np.ndarray[real, ndim=2] x = np.array(coords, dtype=np.float32).copy()
