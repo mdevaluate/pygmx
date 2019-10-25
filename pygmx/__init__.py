@@ -7,7 +7,7 @@ Trajectories in trr format may be read with `.gromacs.reader.TRRReader`, which i
 
 import os
 
-from .tpxio import TPXReader
+from .tpxio import TPXReader, make_xtcframe_whole
 from .xtcio import XTCReader, read_xtcframe, append_xtcfile
 from .enxio import EDRFile
 from .errors import FileTypeError

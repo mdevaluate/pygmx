@@ -2,9 +2,11 @@
 # Cython wrapper around tpxio.cpp
 
 from libc cimport stdio
+from libc.string cimport memcpy
 
 import numpy as np
-#cimport numpy as np
+import cython
+cimport numpy as np
 
 from utility cimport *
 from math cimport *
@@ -254,9 +256,20 @@ cdef class TPXReader:
 
 
 @cython.binding(True)
-def make_xtcframe_whole(coords, box, <TPXReader>reader):
-    cdef t_atoms = gmx_mtop_global_atoms(reader.topology)
+def make_xtcframe_whole(coords, box, TPXReader reader):
+    
+    cdef int natoms = reader.topology.natoms
+    cdef gmx_localtop_t *top = gmx_mtop_generate_local_top(&reader.topology, True)
+    cdef gmx_rmpbc_t gpbc = gmx_rmpbc_init(&top.idef, -1, natoms)
+
     cdef np.ndarray[real, ndim=2] b = np.asarray(box, dtype=np.float32)
-    cdef np.ndarray[real, ndim=2] x = np.asarray(coords, dtype=np.float32)
-    rm_gropbc(const t_atoms *atoms, <rvec *>x.data, <matrix> b)
+    cdef np.ndarray[real, ndim=2] x = np.array(coords, dtype=np.float32).copy()
+    
+    gmx_rmpbc(gpbc, natoms, <rvec *>b.data, <rvec *>x.data)
+
+    # free up memory - in fact, we should free memory of 'top' too
+    # however, it shares memory with 'reader.topology', so we can not free it correctly
+    gmx_rmpbc_done(gpbc)
     return x
+
+
