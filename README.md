@@ -1,10 +1,10 @@
 # Pygmx
 
-A Cython wrapper for the shared library of GROMACS 2016
+A Cython wrapper for the shared library of GROMACS 2018
 
 ## Installation
 
-Pygmx requires some python packages and an installation of GROMACS 2016.
+Pygmx requires some python packages and an installation of GROMACS 2018.
 
 ### Python requirements
 
@@ -15,7 +15,7 @@ Pygmx needs mainly two python packages to be installed, which are available in a
 
 ### Gromacs installation
 
-Pygmx requires the shared library and header files of Gromacs 2016 to be installed.
+Pygmx requires the shared library and header files of Gromacs 2018 to be installed.
 
 #### Through package manager
 
